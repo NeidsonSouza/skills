@@ -1,46 +1,79 @@
 ---
 name: get-parcelas
 description: >
-  Retrieve basic registration data for parcelas from the Omie ERP API.
-  Use this skill when the agent needs to list parcelas and access fields such as
-  `codigo_parcela`. Triggers include: "list parcelas", "get parcela data",
-  "retrieve parcelas from Omie", or any task that requires running
-  `scripts/list_parcela_data.py` to fetch parcela records.
+  Retrieve basic registration data for payment terms (parcelas) from the Omie ERP system.
+  Use this skill when the agent needs any of the following fields: `codigo_parcela`, `cDescricao`, or `nParcelas`.
+  Triggers include: "list parcelas", "get parcela data", "payment terms", "installment codes", 
+  or any request that requires the parcela code for creating a pedido.
 
   DO NOT use this skill for other Omie entities (clients, products, orders),
   for generic database queries, or for non-Omie data sources.
 ---
 
-# get-parcelas (Omie ERP → Parcela List)
+# get-parcelas
 
-Retrieve basic registration data for parcelas by running `scripts/list_parcela_data.py`
-against the **Omie ERP API**. This skill takes no input parameters and returns the full
-list of parcelas in JSON Lines format.
+Runs `scripts/list_parcela_data.py` to retrieve the full list of payment terms (parcelas) 
+from the Omie ERP system and returns their basic registration fields in JSON Lines format.
 
-This skill is scoped exclusively to **Omie ERP parcela data**. For other entities, use
-the appropriate skill.
+This skill takes no parameters and always returns the complete list of parcelas.
 
 ---
 
 ## Prerequisites
 
-Before running any step, verify the following are in place. If anything is missing, stop and
-tell the user what's needed.
+Before running any step, verify the following are in place. If anything is missing,
+stop and tell the user what's needed.
 
-| Requirement | How to check |
-|---|---|
-| `OMIE_APP_KEY` env var set | `[[ -n "${OMIE_APP_KEY}" ]] && echo "✅ Set"` |
-| `OMIE_APP_SECRET` env var set | `[[ -n "${OMIE_APP_SECRET}" ]] && echo "✅ Set"` |
-| `requests` library available | `python -c "import requests"` |
+| Requirement          | How to check                                      |
+|----------------------|---------------------------------------------------|
+| `OMIE_APP_KEY` set   | `[[ -n "${OMIE_APP_KEY}" ]] && echo "✅ Set"`     |
+| `OMIE_APP_SECRET` set| `[[ -n "${OMIE_APP_SECRET}" ]] && echo "✅ Set"`  |
 
 ---
 
 ## Step-by-step workflow
 
-### 1. Confirm the context is Omie parcelas
+### 1. Run the script
 
-Confirm the task involves fetching parcela data from the Omie ERP API. If unclear, ask:
+```bash
+python scripts/list_parcela_data.py
+```
 
-> "Are you trying to retrieve parcela data from the Omie ERP API?"
+Capture the full stdout. The output is a stream of JSON objects (one per line), each
+representing one parcela record.
 
-If the answer is no, stop and handle the request as a general task outside this skill.
+### 2. Parse the output
+
+Each line of output is a JSON object with the following fields:
+
+| Field            | Type     | Description                                      |
+|------------------|----------|--------------------------------------------------|
+| `cDescricao`     | `string` | Description of the payment term                  |
+| `codigo_parcela` | `string` | Parcel code (cCodigo) — Used when creating pedidos |
+| `nParcelas`      | `number` | Number of installments                           |
+
+Example record:
+
+```json
+{
+  "cDescricao": "A Vista",
+  "codigo_parcela": "000",
+  "nParcelas": 1
+}
+```
+
+### 3. Use the data
+
+Pass the relevant fields to the downstream step (e.g. use `codigo_parcela` when creating a new pedido).
+
+---
+
+## Error handling
+
+| Situation                              | Action                                              |
+|----------------------------------------|-----------------------------------------------------|
+| `OMIE_APP_KEY` or `OMIE_APP_SECRET` not set | Show prerequisite instructions and stop        |
+| Script exits with non-zero code        | Show stderr to the user and stop                    |
+| Output is empty                        | Inform the user that no parcelas were returned; ask them to verify API credentials |
+| Output is not valid JSON Lines         | Ask the user to check the script and try again      |
+```
