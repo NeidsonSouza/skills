@@ -5,8 +5,8 @@ import os
 APP_KEY = os.getenv("OMIE_APP_KEY")
 APP_SECRET = os.getenv("OMIE_APP_SECRET")
 PAGE_SIZE = 100
-URL = "https://app.omie.com.br/api/v1/geral/clientes/"
-CALL = "ListarClientesResumido"
+URL = "https://app.omie.com.br/api/v1/geral/produtos/"
+CALL = "ListarProdutos"
 
 
 def fetch_page(page: int) -> dict:
@@ -17,6 +17,7 @@ def fetch_page(page: int) -> dict:
                 "pagina": page,
                 "registros_por_pagina": PAGE_SIZE,
                 "apenas_importado_api": "N",
+                "filtrar_apenas_omiepdv":"N",
             }
         ],
         "app_key": APP_KEY,
