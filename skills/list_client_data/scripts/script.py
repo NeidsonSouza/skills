@@ -4,8 +4,8 @@ import os
 
 APP_KEY = os.getenv("OMIE_APP_KEY")
 APP_SECRET = os.getenv("OMIE_APP_SECRET")
-URL = "https://app.omie.com.br/api/v1/geral/clientes/"
 PAGE_SIZE = 100
+URL = "https://app.omie.com.br/api/v1/geral/clientes/"
 CALL = "ListarClientesResumido"
 
 

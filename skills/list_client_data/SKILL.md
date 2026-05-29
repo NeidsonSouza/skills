@@ -1,26 +1,62 @@
-**Here is the complete content for your `SKILL.md` file**, ready to copy and paste:
+---
+name: get-client-data
+description: >
+  Retrieve basic registration data for all clients from the Omie ERP system.
+  Use this skill when the agent needs any of the following client fields:
+  `cnpj_cpf`, `codigo_cliente`, `nome_fantasia`, or `razao_social`.
+  Triggers include: "get client data", "list clients", "fetch client registration",
+  "I need the client's CNPJ/CPF", or any request that requires identifying a client
+  by name or code before performing a downstream operation.
+
+  DO NOT use this skill for order data, product data, or any non-client entity,
+  even if the request indirectly involves a client.
+---
+
+# get-client-data
+
+Runs `scripts/list_client_data.py` to retrieve the full list of clients from the
+Omie ERP system and returns their basic registration fields in JSON Lines format.
+
+This skill takes no parameters and always returns the complete client list.
 
 ---
 
-```markdown
-# Skill: get_client_data
+## Prerequisites
 
-## Description
-This skill retrieves basic registration data of clients.
+Before running any step, verify the following are in place. If anything is missing,
+stop and tell the user what's needed.
 
-## When to use this skill
-Use this skill when the agent needs one or more of the following client data:
-- `cnpj_cpf`
-- `codigo_cliente`
-- `nome_fantasia`
-- `razao_social`
+| Requirement          | How to check                                      |
+|----------------------|---------------------------------------------------|
+| `OMIE_APP_KEY` set   | `[[ -n "${OMIE_APP_KEY}" ]] && echo "✅ Set"`     |
+| `OMIE_APP_SECRET` set| `[[ -n "${OMIE_APP_SECRET}" ]] && echo "✅ Set"`  |
 
-## Input Parameters
-**None**  
-This skill does not accept any parameters. It always returns the full list of clients.
+---
 
-## Output Format
-The skill returns data in **JSON Lines** format (one JSON object per line), with the following fields:
+## Step-by-step workflow
+
+### 1. Run the script
+
+```bash
+python scripts/list_client_data.py
+```
+
+Capture the full stdout. The output is a stream of JSON objects (one per line), each
+representing one client record.
+
+### 2. Parse the output
+
+Each line of output is a JSON object with the following fields:
+
+| Field                        | Type     | Description                        |
+|------------------------------|----------|------------------------------------|
+| `cnpj_cpf`                   | `string` | Client tax ID (CNPJ or CPF)        |
+| `codigo_cliente`             | `number` | Omie's internal client ID          |
+| `codigo_cliente_integracao`  | `string` | External integration code (may be empty) |
+| `nome_fantasia`              | `string` | Trade name                         |
+| `razao_social`               | `string` | Legal company name                 |
+
+Example record:
 
 ```json
 {
@@ -32,8 +68,18 @@ The skill returns data in **JSON Lines** format (one JSON object per line), with
 }
 ```
 
-## Execution
-The agent must execute the following script when this skill is used:
-```
-scripts/list_client_data.py
-```
+### 3. Use the data
+
+Pass the relevant fields to the downstream step that triggered this skill
+(e.g. use `codigo_cliente` to look up orders, or `cnpj_cpf` to match a billing record).
+
+---
+
+## Error handling
+
+| Situation                              | Action                                              |
+|----------------------------------------|-----------------------------------------------------|
+| `OMIE_APP_KEY` or `OMIE_APP_SECRET` not set | Show prerequisite instructions and stop        |
+| Script exits with non-zero code        | Show stderr to the user and stop                    |
+| Output is empty                        | Inform the user that no clients were returned; ask them to verify API credentials and filters |
+| Output is not valid JSON Lines         | Ask the user to check the script and try again      |
