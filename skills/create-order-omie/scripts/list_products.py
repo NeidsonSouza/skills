@@ -39,7 +39,14 @@ def main():
         items = data.get("produto_servico_cadastro", [])
 
         for item in items:
-            print(json.dumps(item, ensure_ascii=False))
+            if (
+                item.get("descricao_familia") == "Acabado"
+                and item.get("inativo") == "N"
+            ):
+                print(json.dumps({
+                    "codigo_produto": item.get("codigo_produto"),
+                    "descricao": item.get("descricao"),
+                }, ensure_ascii=False))
 
         page += 1
 
