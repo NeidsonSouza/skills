@@ -11,7 +11,7 @@ This skill guides the agent to create a sales order (`pedido de venda`) in Omie 
 
 The final script call will be:
 ```bash
-python create_order.py \
+python scripts/create_order.py \
   --codigo_cliente <value> \
   --codigo_pedido_integracao <value> \
   --products '[{"cfop": "...", "codigo_produto": "...", "quantidade": ...}, ...]'
@@ -37,7 +37,7 @@ The seller's CNPJ is **05950308000100** (Kipanus Industria e Comercio LTDA). If 
 
 ### 1.2 Run client lookup
 ```bash
-python list_clients.py
+python scripts/list_clients.py
 ```
 This script returns all clients registered in the system.
 
@@ -58,7 +58,7 @@ Once confirmed or auto-matched, store the `codigo_cliente` value for the final s
 
 Run the following script to get the next available integration code:
 ```bash
-python get_codigo_pedido_integracao.py
+python scripts/get_codigo_pedido_integracao.py
 ```
 Store the output as `codigo_pedido_integracao`.
 
@@ -81,7 +81,7 @@ For each product collected in Step 3, do the following:
 
 ### 4.1 Run product lookup
 ```bash
-python list_products.py
+python scripts/list_products.py
 ```
 This returns the full product catalog with codes and descriptions.
 
@@ -125,7 +125,7 @@ Ask the user to confirm before proceeding.
 
 Once the user confirms, run:
 ```bash
-python create_order.py \
+python scripts/create_order.py \
   --codigo_cliente <value> \
   --codigo_pedido_integracao <value> \
   --products '[{"cfop": "...", "codigo_produto": "...", "quantidade": ...}, ...]'
